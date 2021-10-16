@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 class Contact(models.Model):
     class Meta:
-        db_table = "Contacts"
+        db_table = "contacts"
 
     name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255)
