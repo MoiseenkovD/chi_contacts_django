@@ -8,8 +8,7 @@ $ git clone https://github.com/MoiseenkovD/chi_contacts_django.git
 $ cd chi_contacts_django
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip install django
-$ pip install djangorestframework
+$ pip install -r requirements.txt
 $ python3 manage.py migrate
 ```
 
