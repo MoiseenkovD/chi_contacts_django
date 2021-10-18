@@ -5,6 +5,7 @@ from rest_framework import serializers
 class Contact(models.Model):
     class Meta:
         db_table = "contacts"
+        unique_together = ('name', 'surname')
 
     name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255)
