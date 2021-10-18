@@ -16,18 +16,6 @@ class Contact(models.Model):
     url = models.CharField(max_length=255)
     photo = models.FileField(upload_to='photos')
 
-    @property
-    def image_url(self):
-        from django.contrib.sites.models import Site
-
-        domain = Site.objects.get_current().domain
-        url = 'http://{domain}'.format(domain=domain)
-
-        if self.photo and hasattr(self.photo, 'url'):
-            return url + self.photo.url
-        else:
-            return ""
-
 class ContactsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact

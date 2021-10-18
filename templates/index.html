@@ -1,0 +1,173 @@
+<html>
+<head>
+    <title>Contacts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app" class="container">
+        <h1 class="mt-3 mb-3">Contacts</h1>
+
+        <div class="input-group mb-3" style="width: 300px;">
+            <input type="text" class="form-control" placeholder="Search" v-model="search" />
+            <button type="button" class="btn btn-primary" v-on:click="reloadContacts()">Search</button>
+        </div>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Country</th>
+                <th>Town</th>
+                <th>Street</th>
+                <th>URL</th>
+                <th>Photo</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="contact in contacts">
+                <td>{! contact.id !}</td>
+                <td>{! contact.name !}</td>
+                <td>{! contact.surname !}</td>
+                <td>{! contact.phone !}</td>
+                <td>{! contact.address !}</td>
+                <td>{! contact.country !}</td>
+                <td>{! contact.town !}</td>
+                <td>{! contact.street !}</td>
+                <td>{! contact.url !}</td>
+                <td>
+                    <img v-if="contact.photo" v-bind:src="contact.photo" class="img-thumbnail" width="50px">
+                </td>
+                <td>
+                    <a href="javascript: void(0);" class="btn btn-primary" v-on:click="editContact(contact)">Edit</a>
+                    <a href="javascript: void(0);" class="btn btn-danger" v-on:click="deleteContact(contact)">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <form v-if="contactForEdit" style="width: 300px;">
+            <h2 v-if="contactForEdit.id != null">Edit contact</h2>
+            <h2 v-if="contactForEdit.id == null">New contact</h2>
+
+            <input type="text" class="form-control mb-2" placeholder="Name" v-model="contactForEdit.name" />
+            <input type="text" class="form-control mb-2" placeholder="Surname" v-model="contactForEdit.surname" />
+            <input type="text" class="form-control mb-2" placeholder="Phone" v-model="contactForEdit.phone" />
+            <input type="text" class="form-control mb-2" placeholder="Address" v-model="contactForEdit.address" />
+            <input type="text" class="form-control mb-2" placeholder="Country" v-model="contactForEdit.country" />
+            <input type="text" class="form-control mb-2" placeholder="Town" v-model="contactForEdit.town" />
+            <input type="text" class="form-control mb-2" placeholder="Street" v-model="contactForEdit.street" />
+            <input type="text" class="form-control mb-2" placeholder="Url" v-model="contactForEdit.url" />
+            <input ref="file" type="file" class="form-control mb-2" v-on:change="onFileChange($event)" />
+
+            <button type="button" class="btn btn-primary" v-on:click="saveContact()">Save</button>
+            <button type="button" class="btn btn-default" v-on:click="cancel()">Cancel</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script type="text/javascript">
+        var app = new Vue({
+            el: "#app",
+            delimiters: ["{!", "!}"],
+            data: {
+                contacts: [],
+                contactForEdit: null,
+                search: "",
+            },
+            mounted: function () {
+                this.reloadContacts();
+                this.resetContactForEdit();
+            },
+            methods: {
+                reloadContacts: function () {
+                    var self = this;
+
+                    var search = "";
+
+                    if (this.search) {
+                        search += "?search=" + this.search;
+                    }
+
+                    fetch("/api/contacts" + search)
+                        .then(function (response) {
+                            return response.json();
+                        })
+                        .then(function (contacts) {
+                            self.contacts = contacts;
+                        });
+                },
+                editContact: function (contact) {
+                    this.contactForEdit = Object.assign({}, contact);
+                },
+                deleteContact: function (contact) {
+                    var self = this;
+                    fetch("/api/contacts/" + contact.id, { method: "DELETE" })
+                        .then(function () {
+                            self.reloadContacts();
+                        });
+                },
+                saveContact: function () {
+                    var self = this;
+
+                    var url = "/api/contacts"
+                    var method = "POST";
+
+                    if (this.contactForEdit.id) {
+                        url = url + "/" + this.contactForEdit.id;
+                        method = "PUT";
+                    }
+
+                    var formData = new FormData();
+                    formData.append("name", this.contactForEdit.name);
+                    formData.append("surname", this.contactForEdit.surname);
+                    formData.append("phone", this.contactForEdit.phone);
+                    formData.append("address", this.contactForEdit.address);
+                    formData.append("country", this.contactForEdit.country);
+                    formData.append("town", this.contactForEdit.town);
+                    formData.append("street", this.contactForEdit.street);
+                    formData.append("url", this.contactForEdit.url);
+                    formData.append("photo", this.contactForEdit.photo || '');
+
+                    fetch(url, { method: method, body: formData })
+                        .then(function () {
+                            self.reloadContacts();
+                            self.resetContactForEdit();
+                        });
+                },
+                cancel: function () {
+                    this.resetContactForEdit();
+                },
+                onFileChange(e) {
+                    var files = e.target.files || e.dataTransfer.files;
+                    if (!files.length) {
+                        return;
+                    }
+                    this.contactForEdit.photo = files[0];
+                },
+                resetContactForEdit: function () {
+                    this.contactForEdit = {
+                        name: "",
+                        surname: "",
+                        phone: "",
+                        address: "",
+                        country: "",
+                        town: "",
+                        street: "",
+                        url: "",
+                        photo: null,
+                    };
+
+                    if (this.$refs.file) {
+                        this.$refs.file.value = null;
+                    }
+                },
+            }
+        });
+    </script>
+</body>
+</html>

@@ -10,11 +10,11 @@ class ContactsApi(APIView):
         search = request.query_params.get('search')
 
         if search is not None:
-            contact = Contact.objects.filter(Q(name=search) | Q(surname=search))
+            contacts = Contact.objects.filter(Q(name=search) | Q(surname=search))
         else:
-            contact = Contact.objects.all()
+            contacts = Contact.objects.all()
 
-        return JsonResponse(list(contact.values()), safe=False)
+        return JsonResponse(ContactsSerializer(contacts, many=True).data, safe=False)
 
     @csrf_exempt
     def post(self, request):
